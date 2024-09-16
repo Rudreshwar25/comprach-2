@@ -1,0 +1,167 @@
+
+Question 1)
+
+# Assume the MIPS processor has byte-addressable memory
+# The base address is stored in the global pointer register ($gp).
+
+
+lhw $s1, 0($gp)          # Load a half-word (16 bits) from memory at the address in $gp into register $s1.
+lhw $s2, 2($gp)          # Load another half-word (16 bits) from memory, 2 bytes offset from the address in 
+			$gp, into register $s2.
+not $s2, $s2               # Compute the bitwise NOT of $s2 to prepare for subtraction (finding the 1's 
+			complement).
+
+addi $s2, $s2, 1         # Add 1 to $s2 to complete the 2's complement operation.
+add $t0, $s1, $s2        # Add $s1 and the 2's complement of $s2, storing the result in register $t0 
+			(effectively subtracting $s2 from $s1).
+
+
+Question 2) 
+
+# Assuming $sp contains the base address of the data
+# and the data is 4 bytes (word) aligned.
+
+addi $t0, $zero, 15       # Number of elements
+addi $t1, $zero, 0       # Sum of the elements
+addi $t2, $zero, 0       # To store the average
+addi $t3, $sp, 0         # Load base address into $t3
+
+loop:
+    lw $s0, 0($t3)         # Load the current number from memory into $s0
+    add $t1, $t1, $s0      # Add the current number to the sum
+    addi $t3, $t3, 4       # Move to the next number (word is 4 bytes)
+    addi $t0, $t0, -1      # Decrement the counter
+    bne $t0, $zero, loop   # If counter is not zero, repeat the loop
+
+# At this point, $t1 contains the sum of 15 integers and $t0 is zero.
+
+# Calculate the average
+Addi $t0, $zero, 15        # Load 15 (number of elements) into $t0
+div $t1, $t1, $t0          # Divide the sum ($t1) by 15 (store result in $t1)
+mflo $t2                   # Move the result (quotient) to $t2 (avg)
+
+Done:
+# The average is now stored in $t2
+
+
+
+Question 3) 
+# The base address is stored in the global pointer register ($sp).
+
+    lw $s0, $sp       		# Load first number into $s0
+    lw $s1, $sp        		# Load second number into $s1
+    addi $t0, $s0 , 0  		 # $t0 = a
+    addi $t1, $s1 , 0          	 	# $t1 = b
+    jal gcd            	          		 # Call the gcd function
+    addi $s2, $v0 , 0        		# $s2 = GCD(a, b)
+
+    mul $s3, $s0, $s1   		# multiply $s3 = a* b
+    div $s3, $s2        		# Divide a* b by GCD(a, b)
+    mflo $s4           		 # result is stored in $s4 (LCM)
+
+hcf:
+    bne $t1, $zero, gcd_loop      	 # If $t1 != 0, go to gcd_loop
+    add $v0, $t0,$zero                  	# GCD(a, b) = a (when b = 0)
+    jr $ra                         		# Return from function
+
+hcf_find:
+    div $t0, $t1                 	  	# Divide $t0 by $t1
+    mfhi $t0                         	# Get the remainder ($t0 = a % b)
+    addi $t2, $t1, 0      
+    addi $t1, $t0, 0       		# Move remainder to $t1     
+    addi $t0, $t2, 0      		 # Move the old $t1 to $t0
+    bne $t1, $zero, hcf_find    	 # Repeat the loop if $t1 != 0
+    J hcf                     		 # Return from function
+
+
+
+Question 4)
+
+# The base address is stored in the global pointer register ($sp).
+
+    lw   $s0, $sp  				# Load first number into $s0
+    lw   $s3, 4($sp)      			# Load second number into $s3
+    add $s2, $zero, $zero   		# Initialize result (s2) to 0
+
+    # Check if either of the numbers is zero
+    beq  $s0, $zero, done		 	# If num1 (s0) is zero, jump to done
+    beq  $s3, $zero, done 			# If num2 (s3) is zero, jump to done
+    
+
+multiply:
+     add  $s2, $s2, $s0 			# s2 = s2 + s0
+
+    addi $s3, $s3, -1 			# s3 = s3 - 1
+    bne $s3,$zero, multiply 		# If s3 != 0, continue loop
+
+done:
+ # result is at $s2.
+
+
+Question 5)
+
+# The address of the list is in $t0 
+main:
+    addi   $t1, $zero, 10              # Set the number of elements in the list (10 elements)
+    addi   $t2, $zero,  0               # Initialize loop counter (index/iterations)
+    
+    # Load the number to search for
+    addi  $t3, $zero, X               # Load the address of the number to search for
+    lw   $t4, 0($t3)          # Load the value of the number into $t4
+    
+    # Initialize result
+    addi  $t5, $t3, 1          # Load the address of the output
+    addi   $t6, $t5, 1     # Load the address of the iterations
+    addi  $t7,$t6, 1          # Load the address of the index
+    
+  search_loop:
+    beq  $t1, $t2, not_found  # If the counter equals the number of elements, exit the loop (not found)
+    
+    lw   $t8, 0($t0)          # Load the current list element into $t8
+    beq  $t4, $t8, found      # If the element is equal to the search number, jump to found
+    
+    addi $t0, $t0, 4          # Move to the next element in the list
+    addi $t2, $t2, 1          # Increment the counter (iterations/index)
+    j    search_loop          # Repeat the loop
+    
+# If not found
+not_found:
+    addi   $t9, $zero, 2               # Set result as "not found" (2)
+    sw   $t9, 0($t5)          # Store result (2) at output
+    j    end_program          # End the program
+
+# If found
+found:
+   addi   $t9, $zero, 1               # Set result as "found" (1)
+    sw   $t9, 0($t5)          # Store result (1) at output
+    sw   $t2, 0($t6)          # Store the number of iterations
+    sw   $t2, 0($t7)          # Store the index where the element was found
+    
+
+
+
+Question 6)
+Assuming the base address of the string is stored in register `$gp`, with the memory being byte-addressable. Each character occupies 1 byte and is stored consecutively in memory.
+
+    add  $s0, $gp, $zero
+    add   $t0, $zero, $zero           	# Initialize index counter in $t0 (starting from 0)
+    lb $s1 ,char			# loading the char into s1.
+    addi  $t1, $zero, -1             	# Set default "not found" value (-1) in $t1
+
+find:
+    lb    $t2, ($s0)          		# Load the current character from the string into $t2
+    beq   $t2, $zero, not_found  	# If current character is null (end of string), jump to not_found
+    beq   $t2, $s1, found    	# If current character matches the target, jump to found
+
+    addi  $s0, $s0, 1        		# Move to the next character in the string (increment address by 1 byte)
+    addi  $t0, $t0, 1         		# Increment the index counter
+    j     find	         		# Jump back to search_loop to check the next character
+
+found:
+    # Character is found, the index is stored in $t0
+
+not_found:
+    # If not found, $t1 will hold the default value (-1)
+
+
+
